@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.effect.Blend?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane fx:id="pane" prefHeight="595.0" prefWidth="798.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+   <children>
+      <MenuBar fx:id="menuBar" prefHeight="32.0" prefWidth="798.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem fx:id="closeMenuItem" mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Delete" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+         <effect>
+            <Blend />
+         </effect>
+      </MenuBar>
+      <ChoiceBox fx:id="baudRate" layoutX="99.0" layoutY="199.0" prefHeight="18.0" prefWidth="70.0" />
+      <Separator layoutX="184.0" layoutY="32.0" orientation="VERTICAL" prefHeight="563.0" prefWidth="0.0" />
+      <ChoiceBox fx:id="bitRate" layoutX="99.0" layoutY="231.0" prefHeight="18.0" prefWidth="70.0" />
+      <ChoiceBox fx:id="stopBit" layoutX="99.0" layoutY="264.0" prefHeight="18.0" prefWidth="70.0" />
+      <ChoiceBox fx:id="parity" layoutX="99.0" layoutY="297.0" prefHeight="18.0" prefWidth="70.0" />
+      <ChoiceBox fx:id="rts" layoutX="99.0" layoutY="329.0" prefHeight="18.0" prefWidth="70.0" />
+      <Label layoutX="29.0" layoutY="203.0" text="Baud rate" />
+      <Label layoutX="29.0" layoutY="235.0" text="Bit rate" />
+      <Label layoutX="29.0" layoutY="268.0" text="Stop bit" />
+      <Label layoutX="29.0" layoutY="301.0" text="Parity" />
+      <Label layoutX="29.0" layoutY="333.0" text="RTS" />
+      <ChoiceBox fx:id="dtr" layoutX="99.0" layoutY="361.0" prefHeight="18.0" prefWidth="70.0" />
+      <Label layoutX="29.0" layoutY="365.0" text="DTR" />
+      <Separator layoutX="1.0" layoutY="181.0" prefHeight="0.0" prefWidth="186.0" />
+      <Separator layoutX="-1.0" layoutY="444.0" prefHeight="0.0" prefWidth="186.0" />
+      <ChoiceBox fx:id="portNames" layoutX="66.0" layoutY="82.0" prefHeight="18.0" prefWidth="104.0" />
+      <Label layoutX="28.0" layoutY="86.0" prefHeight="18.0" prefWidth="58.0" text="Port" textAlignment="RIGHT" />
+      <Button layoutX="20.0" layoutY="136.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="70.0" text="Set" />
+      <Button layoutX="100.0" layoutY="136.0" mnemonicParsing="false" onAction="#refresh" prefHeight="26.0" prefWidth="70.0" text="Refresh" />
+      <Button layoutX="56.0" layoutY="401.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="70.0" text="Set" />
+   </children>
+   <effect>
+      <Blend />
+   </effect>
+</AnchorPane>
