@@ -11,12 +11,19 @@ package sample;
  *
  */
 
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.Separator;
+import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXTextField;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
+import com.fazecast.jSerialComm.*;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import jssc.*;
+import javafx.scene.shape.Rectangle;
 import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
+
 
 public class Controller {
 
@@ -26,8 +33,13 @@ public class Controller {
      *
      */
 
+    enum LOGS{ INFO, ERROR, INTRP}
+
+    private Thread thread;
     private int setupCount = 0;
     private SerialPort serialPort;
+    private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(20);
+    private SimpleBooleanProperty loopCondition = new SimpleBooleanProperty(true);
 
     /**
      *
@@ -36,23 +48,28 @@ public class Controller {
      *
      *
      */
-
     @FXML
-    ChoiceBox<String> portNames;
+    JFXTextField sizeOfChartTextArea;
     @FXML
-    ChoiceBox<Integer> baudRate;
+    JFXComboBox<SerialPort> portNames;
     @FXML
-    ChoiceBox<Integer> dataBits;
+    JFXComboBox<Integer> baudRate;
     @FXML
-    ChoiceBox<Integer> stopBit;
+    JFXComboBox<Integer> dataBits;
     @FXML
-    ChoiceBox<String> parity;
+    JFXComboBox<Integer> stopBit;
+    @FXML
+    JFXComboBox<String> parity;
+    @FXML
+    TextArea dialogPane;
     @FXML
     MenuBar menuBar;
     @FXML
     AnchorPane pane;
     @FXML
     Separator v_separator;
+    @FXML
+    LineChart<String, Integer> chart;
 
     /**
      *
@@ -60,12 +77,9 @@ public class Controller {
      *  to read/write
      *
      * @return SerialPort
-     * 
+     *
      */
 
-    public SerialPort getPort(){
-        return serialPort;
-    }
 
     /**
      *
@@ -75,32 +89,32 @@ public class Controller {
      */
 
     private void baudRateSetup(){
-        baudRate.getItems().add(SerialPort.BAUDRATE_110);
-        baudRate.getItems().add(SerialPort.BAUDRATE_300);
-        baudRate.getItems().add(SerialPort.BAUDRATE_600);
-        baudRate.getItems().add(SerialPort.BAUDRATE_1200);
-        baudRate.getItems().add(SerialPort.BAUDRATE_4800);
-        baudRate.getItems().add(SerialPort.BAUDRATE_9600);
-        baudRate.getItems().add(SerialPort.BAUDRATE_14400);
-        baudRate.getItems().add(SerialPort.BAUDRATE_19200);
-        baudRate.getItems().add(SerialPort.BAUDRATE_38400);
-        baudRate.getItems().add(SerialPort.BAUDRATE_57600);
-        baudRate.getItems().add(SerialPort.BAUDRATE_115200);
-        baudRate.getItems().add(SerialPort.BAUDRATE_128000);
-        baudRate.getItems().add(SerialPort.BAUDRATE_256000);
+        baudRate.getItems().add(110);
+        baudRate.getItems().add(300);
+        baudRate.getItems().add(600);
+        baudRate.getItems().add(1200);
+        baudRate.getItems().add(4800);
+        baudRate.getItems().add(9600);
+        baudRate.getItems().add(14400);
+        baudRate.getItems().add(19200);
+        baudRate.getItems().add(38400);
+        baudRate.getItems().add(57600);
+        baudRate.getItems().add(115200);
+        baudRate.getItems().add(128000);
+        baudRate.getItems().add(256000);
     }
     
     private void dataBitsSetup(){
-        dataBits.getItems().add(SerialPort.DATABITS_5);
-        dataBits.getItems().add(SerialPort.DATABITS_6);
-        dataBits.getItems().add(SerialPort.DATABITS_7);
-        dataBits.getItems().add(SerialPort.DATABITS_8);
+        dataBits.getItems().add(5);
+        dataBits.getItems().add(6);
+        dataBits.getItems().add(7);
+        dataBits.getItems().add(8);
     }
 
     private void stopBitSetup(){
-        stopBit.getItems().add(SerialPort.STOPBITS_1);
-        stopBit.getItems().add(SerialPort.STOPBITS_1_5);
-        stopBit.getItems().add(SerialPort.STOPBITS_2);
+        stopBit.getItems().add(1);
+        stopBit.getItems().add(1_5);
+        stopBit.getItems().add(2);
     }
 
     private void paritySetup(){
@@ -110,12 +124,12 @@ public class Controller {
         parity.getItems().add("Space");
         parity.getItems().add("None");
     }
-
+/*
     private int paritySetter(){
         if (parity.getValue().equalsIgnoreCase("EVEN"))
-            return SerialPort.PARITY_EVEN;
+            return ;
         if (parity.getValue().equalsIgnoreCase("ODD"))
-            return SerialPort.PARITY_ODD;
+            return ;
         if (parity.getValue().equalsIgnoreCase("MARK"))
             return SerialPort.PARITY_MARK;
         if (parity.getValue().equalsIgnoreCase("SPACE"))
@@ -124,7 +138,8 @@ public class Controller {
             return SerialPort.PARITY_NONE;
         else return 0;
     }
-
+    */
+    
     /**
      *
      * setup choiceBoxes and other elements
@@ -138,17 +153,51 @@ public class Controller {
      *
      */
 
+    double x = 0;
+
+    XYChart.Series<String, Integer> series;
     @FXML
     private void setUp(){
         if (setupCount == 0){
-            pane.setMinHeight(595);
-            pane.setMinWidth(798);
+            dialogPane.setWrapText(true);
+            series = new XYChart.Series<>();
+            chart.getData().add(series);
             v_separator.prefHeightProperty().bind(pane.heightProperty());
             menuBar.prefWidthProperty().bind(pane.widthProperty());
+            refresh();
             baudRateSetup();
             dataBitsSetup();
             stopBitSetup();
+            /*
+            thread = new Thread(()->{
+                while (loopCondition.get()){
+                    Platform.runLater(()->{
+                        while (series.getData().size()
+                                >= SIZE_OF_CHART.intValue()){
+                            int i = 0;
+                            series.getData().remove(i);
+                            ++i;
+                        }
+                        XYChart.Data data = new XYChart.Data<>(x+"",
+                                (int)(Math.random()*200));
+                        Rectangle rectangle = new Rectangle();
+                        rectangle.setVisible(false);
+                        data.setNode(rectangle);
+                        series.getData().add(data);
+                        textAreaChanger(new Integer((String) data.getXValue()),
+                                (Integer)data.getYValue());
+                    });
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    ++x;
+                }
+            });
+            thread.start();
             paritySetup();
+            */
             ++setupCount;
         }
     }
@@ -160,10 +209,34 @@ public class Controller {
      *
      */
 
+
+    private void textAreaChanger(int x, int y){
+        dialogPane.appendText("\n["+LOGS.INFO+"]\t\t\t\t\t "
+                +"x : "+x
+                +"\t\ty : "+y);
+    }
+
+    @FXML
+    private void EOO(){
+        if (thread.isAlive()){
+            System.out.println("thread is stopped");
+            thread.stop();
+        }
+        else{
+            System.out.println("thread is started");
+            thread.resume();
+        }
+    }
+
+    @FXML
+    private void chartChanger(){
+        SIZE_OF_CHART.set(new Integer(sizeOfChartTextArea.getText()));
+    }
+
     @FXML
     private void refresh(){
-        String[] list = SerialPortList.getPortNames();
-        portNames = new ChoiceBox<>();
+        SerialPort[] list = SerialPort.getCommPorts();
+        portNames = new JFXComboBox<>();
         for (int i = 0; i < list.length; i++){
             portNames.getItems().add(list[i]);
         }
@@ -173,14 +246,39 @@ public class Controller {
     @FXML
     private void setButton(){
         System.out.println("set button clicked!");
-        serialPort = new SerialPort(portNames.getValue());
-        try {
-            serialPort.setParams(baudRate.getValue(),
-                    dataBits.getValue(),
-                    stopBit.getValue(),
-                    paritySetter());
-        } catch (SerialPortException e) {
-            e.printStackTrace();
-        }
+        serialPort = portNames.getValue();
+        serialPort.setBaudRate(baudRate.getValue());
+        serialPort.setNumDataBits(dataBits.getValue());
+        serialPort.setNumStopBits(stopBit.getValue());
+        byte[] buffer = new byte[2];
+        thread = new Thread(()->{
+            while (loopCondition.getValue()){
+                Platform.runLater(()->{
+                    while (series.getData().size()
+                            >= SIZE_OF_CHART.intValue()){
+                        int i = 0;
+                        series.getData().remove(i);
+                        ++i;
+                    }
+                    serialPort.readBytes(buffer, 2);
+                    XYChart.Data data = new XYChart.Data<>(x+"",
+                            buffer[0]+buffer[1]);
+                    Rectangle rectangle = new Rectangle();
+                    rectangle.setVisible(false);
+                    data.setNode(rectangle);
+                    series.getData().add(data);
+                    textAreaChanger(new Integer((String) data.getXValue()),
+                            (Integer)data.getYValue());
+                });
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                x+= 0.5;
+            }
+        });
+        thread.start();
     }
+
 }
