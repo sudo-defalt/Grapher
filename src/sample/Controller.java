@@ -209,8 +209,8 @@ public class Controller {
         }
     }
 
-    private void textAreaChanger(int x, int y){
-        dialogPane.appendText("\n["+LOGS.INFO+"]\t\t\t\t\t "
+    private void textAreaChanger(LOGS log, int x, int y){
+        dialogPane.appendText("\n["+log.name()+"]\t\t\t\t\t "
                 +"x : "+x
                 +"\t\ty : "+y);
     }
@@ -263,7 +263,7 @@ public class Controller {
                  */
                 Platform.runLater(()->{
                     /**
-                     * this loop always will keep size of charts X-axis fixed
+                     * this loop will keep size of charts X-axis fixed
                      */
                     while (series.getData().size()
                             >= SIZE_OF_CHART.intValue()){
@@ -273,7 +273,7 @@ public class Controller {
                     }
                     /**
                      * set data of series here -> y will be the data which been read from
-                     * serial port , x will be set automatically in line 272
+                     * serial port , x will be set automatically in line 288
                      * use global variables x and y
                      *
                      * please use textAreaChanger method to update dialogPane
