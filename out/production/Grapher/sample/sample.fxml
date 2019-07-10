@@ -18,7 +18,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane fx:id="pane" onMouseClicked="#setUp" prefHeight="595.0" prefWidth="798.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<AnchorPane fx:id="pane" onMouseEntered="#setUp" prefHeight="595.0" prefWidth="798.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
       <MenuBar fx:id="menuBar" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32.0" prefWidth="798.0">
         <menus>
@@ -79,9 +79,11 @@
           <NumberAxis side="LEFT" />
         </yAxis>
       </LineChart>
-      <JFXTextField fx:id="sizeOfChartTextArea" layoutX="94.0" layoutY="397.0" prefHeight="31.0" prefWidth="104.0" />
-      <JFXButton layoutX="28.0" layoutY="397.0" mnemonicParsing="false" onAction="#chartChanger" text="Set" />
-      <JFXButton layoutX="63.0" layoutY="517.0" mnemonicParsing="false" onAction="#EOO" prefHeight="31.0" prefWidth="82.0" text="Stop" />
+      <JFXTextField fx:id="sizeOfChartTextArea" layoutX="52.0" layoutY="408.0" prefHeight="31.0" prefWidth="104.0" />
+      <JFXButton layoutX="83.0" layoutY="542.0" mnemonicParsing="false" onAction="#chartChanger" text="Set" />
+      <JFXTextField layoutX="52.0" layoutY="490.0" prefHeight="31.0" prefWidth="104.0" fx:id="x_axisStep" />
+      <Label layoutX="52.0" layoutY="387.0" prefHeight="21.0" prefWidth="104.0" text="  X-Axis Range" />
+      <Label layoutX="59.0" layoutY="472.0" prefHeight="21.0" prefWidth="97.0" text="  X-Axis Step" />
    </children>
    <effect>
       <Blend />
