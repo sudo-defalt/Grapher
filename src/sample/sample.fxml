@@ -15,6 +15,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.effect.Blend?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
@@ -70,15 +71,19 @@
       <JFXComboBox fx:id="dataBits" layoutX="100.0" layoutY="253.0" prefHeight="31.0" prefWidth="97.0" />
       <JFXComboBox fx:id="stopBit" layoutX="99.0" layoutY="286.0" prefHeight="31.0" prefWidth="97.0" />
       <JFXComboBox fx:id="parity" layoutX="99.0" layoutY="320.0" prefHeight="31.0" prefWidth="97.0" />
-      <TextArea fx:id="dialogPane" accessibleRole="PARENT" editable="false" focusTraversable="false" layoutX="213.0" layoutY="373.0" prefHeight="218.0" prefWidth="578.0" wrapText="true" AnchorPane.leftAnchor="213.0" AnchorPane.rightAnchor="7.0" AnchorPane.topAnchor="373.0" />
-      <LineChart fx:id="chart" alternativeRowFillVisible="false" axisSortingPolicy="NONE" createSymbols="false" layoutX="211.0" layoutY="36.0" prefHeight="332.0" prefWidth="585.0" AnchorPane.bottomAnchor="227.0" AnchorPane.leftAnchor="211.0" AnchorPane.rightAnchor="2.0" AnchorPane.topAnchor="36.0">
-        <xAxis>
-          <CategoryAxis side="BOTTOM" />
-        </xAxis>
-        <yAxis>
-          <NumberAxis side="LEFT" />
-        </yAxis>
-      </LineChart>
+      <VBox fx:id="innerPane" layoutX="211.0" layoutY="36.0">
+         <children>
+            <LineChart fx:id="chart" alternativeRowFillVisible="false" axisSortingPolicy="NONE" createSymbols="false" prefHeight="332.0" prefWidth="585.0">
+              <xAxis>
+                <CategoryAxis side="BOTTOM" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis fx:id="y_axis" side="LEFT" />
+              </yAxis>
+            </LineChart>
+            <TextArea fx:id="dialogPane" accessibleRole="PARENT" editable="false" focusTraversable="false" prefHeight="218.0" prefWidth="578.0" wrapText="true" />
+         </children>
+      </VBox>
       <JFXTextField fx:id="sizeOfChartTextArea" layoutX="52.0" layoutY="408.0" prefHeight="31.0" prefWidth="104.0" />
       <JFXButton layoutX="83.0" layoutY="542.0" mnemonicParsing="false" onAction="#chartChanger" text="Set" />
       <JFXTextField layoutX="52.0" layoutY="490.0" prefHeight="31.0" prefWidth="104.0" fx:id="x_axisStep" />

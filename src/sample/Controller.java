@@ -6,8 +6,8 @@ package sample;
  * this class is controller of UI
  * main operations of GUI will be setup and triggered here
  *
- * @auther Adnan
- * @auther Anahita
+ * @author Adnan
+ * @author Anahita
  *
  */
 
@@ -18,11 +18,14 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import com.fazecast.jSerialComm.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.fxml.FXML;
+import javafx.scene.layout.Pane;
+import javafx.scene.shape.Rectangle;
 
 
 public class Controller {
@@ -40,6 +43,7 @@ public class Controller {
     private SerialPort serialPort;
     private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(20);
     private SimpleDoubleProperty STEP_OF_CHART = new SimpleDoubleProperty(0.5);
+    private static Double SCALE_OF_Y_AXIS;
     private SimpleBooleanProperty loopCondition = new SimpleBooleanProperty(true);
 
     /**
@@ -49,6 +53,8 @@ public class Controller {
      *
      *
      */
+    @FXML
+    Pane innerPane;
     @FXML
     JFXTextField sizeOfChartTextArea, x_axisStep;
     @FXML
@@ -71,17 +77,8 @@ public class Controller {
     Separator v_separator;
     @FXML
     LineChart<String, Integer> chart;
-
-    /**
-     *
-     * this method return initialized serial port
-     *  to read/write
-     *
-     * @return SerialPort
-     *
-     */
-
-
+    @FXML
+    NumberAxis y_axis;
     /**
      *
      * inner Setup for choiceBoxes of
@@ -155,7 +152,7 @@ public class Controller {
      * before commit and push in git
      *
      */
-    
+
     double x = 0;
     double y;
     XYChart.Series<String, Integer> series;
@@ -164,7 +161,15 @@ public class Controller {
     private void setUp(){
         if (setupCount == 0){
             dialogPane.setWrapText(true);
+            chart.prefWidthProperty().bind(innerPane
+                    .widthProperty());
+            chart.prefHeightProperty().bind(innerPane
+                    .heightProperty().subtract(265.0));
             series = new XYChart.Series<>();
+            innerPane.prefHeightProperty().bind(Main
+                    .scene.heightProperty());
+            innerPane.prefWidthProperty().bind(Main
+                    .scene.widthProperty().subtract(215));
             chart.getData().add(series);
             v_separator.prefHeightProperty().bind(pane.heightProperty());
             menuBar.prefWidthProperty().bind(pane.widthProperty());
@@ -173,10 +178,14 @@ public class Controller {
             dataBitsSetup();
             stopBitSetup();
             paritySetup();
+            if (SCALE_OF_Y_AXIS == 20.0){
+                y_axis.setUpperBound(20.0);
+            }else {
+                y_axis.setUpperBound(3000.0);
+            }
             /**
              * this thread is a simple meaningless exp
              */
-            /*
             thread = new Thread(()->{
                 while (loopCondition.get()){
                     Platform.runLater(()->{
@@ -187,12 +196,12 @@ public class Controller {
                             ++i;
                         }
                         XYChart.Data data = new XYChart.Data<>(x+"",
-                                (int)(Math.random()*200));
+                                (int)(Math.random()*SCALE_OF_Y_AXIS));
                         Rectangle rectangle = new Rectangle();
                         rectangle.setVisible(false);
                         data.setNode(rectangle);
                         series.getData().add(data);
-                        textAreaChanger(new Integer((String) data.getXValue()),
+                        textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
                                 (Integer)data.getYValue());
                     });
                     try {
@@ -200,17 +209,27 @@ public class Controller {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    ++x;
+                    x+= STEP_OF_CHART.doubleValue();
                 }
             });
             thread.start();
-            */
             ++setupCount;
         }
     }
 
-    private void textAreaChanger(int x, int y){
-        dialogPane.appendText("\n["+LOGS.INFO+"]\t\t\t\t\t "
+    @FXML
+    private void torsion(){
+        SCALE_OF_Y_AXIS = 20.0;
+        Main.changeToMain();
+    }
+    @FXML
+    private void tension(){
+        SCALE_OF_Y_AXIS = 3000.0;
+        Main.changeToMain();
+    }
+
+    private void textAreaChanger(LOGS log, double x, int y){
+        dialogPane.appendText("\n["+log.name()+"]\t\t\t\t\t "
                 +"x : "+x
                 +"\t\ty : "+y);
     }
@@ -290,5 +309,4 @@ public class Controller {
         });
         thread.start();
     }
-
 }
