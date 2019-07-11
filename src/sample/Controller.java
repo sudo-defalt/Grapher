@@ -217,6 +217,7 @@ public class Controller {
         }
     }
 
+
     @FXML
     private void torsion(){
         SCALE_OF_Y_AXIS = 20.0;
@@ -282,7 +283,7 @@ public class Controller {
                  */
                 Platform.runLater(()->{
                     /**
-                     * this loop always will keep size of charts X-axis fixed
+                     * this loop will keep size of charts X-axis fixed
                      */
                     while (series.getData().size()
                             >= SIZE_OF_CHART.intValue()){
@@ -292,7 +293,7 @@ public class Controller {
                     }
                     /**
                      * set data of series here -> y will be the data which been read from
-                     * serial port , x will be set automatically in line 272
+                     * serial port , x will be set automatically in line 288
                      * use global variables x and y
                      *
                      * please use textAreaChanger method to update dialogPane
@@ -310,3 +311,4 @@ public class Controller {
         thread.start();
     }
 }
+
