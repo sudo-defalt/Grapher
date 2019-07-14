@@ -25,7 +25,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Rectangle;
+
+import java.util.Scanner;
 
 
 public class Controller {
@@ -41,8 +42,8 @@ public class Controller {
     private Thread thread;
     private int setupCount = 0;
     private SerialPort serialPort;
-    private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(20);
-    private SimpleDoubleProperty STEP_OF_CHART = new SimpleDoubleProperty(0.5);
+    private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(60);
+    private SimpleDoubleProperty STEP_OF_CHART = new SimpleDoubleProperty(1.0);
     private static Double SCALE_OF_Y_AXIS;
     private SimpleBooleanProperty loopCondition = new SimpleBooleanProperty(true);
 
@@ -137,7 +138,7 @@ public class Controller {
             return 4;
         if (parity.getValue().equalsIgnoreCase("NONE"))
             return 0;
-        else return 0;
+        else return -1;
     }
     
     /**
@@ -186,33 +187,30 @@ public class Controller {
             /**
              * this thread is a simple meaningless exp
              */
-            thread = new Thread(()->{
-                while (loopCondition.get()){
-                    Platform.runLater(()->{
-                        while (series.getData().size()
-                                >= SIZE_OF_CHART.intValue()){
-                            int i = 0;
-                            series.getData().remove(i);
-                            ++i;
-                        }
-                        XYChart.Data data = new XYChart.Data<>(x+"",
-                                (int)(Math.random()*SCALE_OF_Y_AXIS));
-                        Rectangle rectangle = new Rectangle();
-                        rectangle.setVisible(false);
-                        data.setNode(rectangle);
-                        series.getData().add(data);
-                        textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
-                                (Integer)data.getYValue());
-                    });
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    x+= STEP_OF_CHART.doubleValue();
-                }
-            });
-            thread.start();
+//            thread = new Thread(()->{
+//                while (loopCondition.get()){
+//                    Platform.runLater(()->{
+//                        while (series.getData().size()
+//                                >= SIZE_OF_CHART.intValue()){
+//                            int i = 0;
+//                            series.getData().remove(i);
+//                            ++i;
+//                        }
+//                        XYChart.Data data = new XYChart.Data<>(x+"",
+//                                (int)(Math.random()*SCALE_OF_Y_AXIS));
+//                        series.getData().add(data);
+//                        textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
+//                                (Integer)data.getYValue());
+//                    });
+//                    try {
+//                        Thread.sleep(STEP_OF_CHART.intValue()*1000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    x+= STEP_OF_CHART.doubleValue();
+//                }
+//            });
+//            thread.start();
             ++setupCount;
         }
     }
@@ -253,9 +251,8 @@ public class Controller {
     @FXML
     private void refresh(){
         SerialPort[] list = SerialPort.getCommPorts();
-        portNames = new JFXComboBox<>();
         for (int i = 0; i < list.length; i++){
-            portNames.getItems().add(list[i]
+            portNames.getItems().set(i, list[i]
                     .getDescriptivePortName());
         }
 
@@ -266,18 +263,24 @@ public class Controller {
         /**
          * setting parameters of serial port
          */
-        serialPort = SerialPort.getCommPort(portNames.getValue());
-        serialPort.setBaudRate(baudRate.getValue());
-        serialPort.setNumDataBits(dataBits.getValue());
-        serialPort.setNumStopBits(stopBit.getValue());
-        serialPort.setParity(paritySetter());
-
+        if (portNames.getValue() != null
+                && baudRate.getValue() != null
+                && dataBits.getValue() != null
+                && stopBit.getValue() != null
+                && paritySetter() != -1) {
+            serialPort = SerialPort.getCommPort(portNames.getValue());
+            serialPort.setBaudRate(baudRate.getValue());
+            serialPort.setNumDataBits(dataBits.getValue());
+            serialPort.setNumStopBits(stopBit.getValue());
+            serialPort.setParity(paritySetter());
+        }
+        Scanner input = new Scanner(serialPort.getInputStream());
         /**
          * this thread is used to show real-time broadcast of serial port
          *
          */
         thread = new Thread(()->{
-            while (loopCondition.getValue()){
+            while (input.hasNextLine()){
                 /**
                  * platform which set data of chart
                  */
@@ -299,9 +302,14 @@ public class Controller {
                      * please use textAreaChanger method to update dialogPane
                      *
                      */
+                    XYChart.Data data = new XYChart.Data<>(x+"",
+                            new Integer(input.nextLine()));
+                    series.getData().add(data);
+                    textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
+                            (Integer)data.getYValue());
                 });
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(STEP_OF_CHART.intValue()*1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
