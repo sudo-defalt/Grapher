@@ -26,7 +26,12 @@ import javafx.scene.layout.AnchorPane;
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public class Controller {
@@ -41,11 +46,11 @@ public class Controller {
 
     private Thread thread;
     private int setupCount = 0;
-    private SerialPort serialPort;
     private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(60);
     private SimpleDoubleProperty STEP_OF_CHART = new SimpleDoubleProperty(1.0);
     private static Double SCALE_OF_Y_AXIS;
     private SimpleBooleanProperty loopCondition = new SimpleBooleanProperty(true);
+    final int WINDOW_SIZE = 15;
 
     /**
      *
@@ -264,62 +269,99 @@ public class Controller {
         /**
          * setting parameters of serial port
          */
-        if (portNames.getValue() != null
-                && baudRate.getValue() != null
-                && dataBits.getValue() != null
-                && stopBit.getValue() != null
-                && paritySetter() != -1) {
-            serialPort = SerialPort.getCommPort(portNames.getValue());
-            serialPort.setBaudRate(baudRate.getValue());
-            serialPort.setNumDataBits(dataBits.getValue());
-            serialPort.setNumStopBits(stopBit.getValue());
-            serialPort.setParity(paritySetter());
-        }
-        Scanner input = new Scanner(serialPort.getInputStream());
+//        if (portNames.getValue() != null
+//                && baudRate.getValue() != null
+//                && dataBits.getValue() != null
+//                && stopBit.getValue() != null
+//                && paritySetter() != -1) {
+//
+//            serialPort.setBaudRate(baudRate.getValue());
+//            serialPort.setNumDataBits(dataBits.getValue());
+//            serialPort.setNumStopBits(stopBit.getValue());
+//            serialPort.setParity(paritySetter());
+//        }
+
+        SerialPort serialPort = SerialPort.getCommPort(portNames.getValue());
         /**
          * this thread is used to show real-time broadcast of serial port
          *
          */
-        thread = new Thread(()->{
-            while (input.hasNextLine()){
-                /**
-                 * platform which set data of chart
-                 */
-                Platform.runLater(()->{
-                    /**
-                     * this loop will keep size of charts X-axis fixed
-                     */
-                    while (series.getData().size()
-                            >= SIZE_OF_CHART.intValue()){
-                        int i = 0;
-                        series.getData().remove(i);
-                        ++i;
-                    }
-                    /**
-                     * set data of series here -> y will be the data which been read from
-                     * serial port , x will be set automatically in line 288
-                     * use global variables x and y
-                     *
-                     * please use textAreaChanger method to update dialogPane
-                     *
-                     */
-                    XYChart.Data data = new XYChart.Data<>(x+"",
-                            new Integer(input.nextLine()));
+
+
+        if(serialPort.openPort()) {
+            Scanner portScanner = new Scanner(serialPort.getInputStream());
+            //defining a series to display data
+            XYChart.Series<String, Integer> series = new XYChart.Series<>();
+
+
+            // add series to chart
+            chart.getData().add(series);
+
+
+            // this is used to display time in HH:mm:ss format
+            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+
+            // setup a scheduled executor to periodically put data into the chart
+            ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+            // put data onto graph per second
+            scheduledExecutorService.scheduleAtFixedRate(() -> {
+
+                // Update the chart
+                Platform.runLater(() -> {
+                    // get current time
+                    Date now = new Date();
+                    String newData = portScanner.nextLine();
+                    XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer.parseInt(newData));
                     series.getData().add(data);
-                    textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
-                            (Integer)data.getYValue());
+
+                    if (series.getData().size() > WINDOW_SIZE)
+                        series.getData().remove(0);
                 });
-                try {
-                    Thread.sleep(STEP_OF_CHART.intValue()*1000);
-                } catch (InterruptedException e) {
-                    textAreaChanger(LOGS.INTRP, Double.NaN, Integer.MIN_VALUE);
-                    e.printStackTrace();
-                }
-                x+= STEP_OF_CHART.doubleValue();
-            }
-            input.close();
-        });
-        thread.start();
+            }, 0, 1, TimeUnit.SECONDS);
+        } else {
+            System.out.print("boogh");
+        }
+//        thread = new Thread(()->{
+//            while (input.hasNextLine()){
+//                /**
+//                 * platform which set data of chart
+//                 */
+//                Platform.runLater(()->{
+//                    /**
+//                     * this loop will keep size of charts X-axis fixed
+//                     */
+//                    while (series.getData().size()
+//                            >= SIZE_OF_CHART.intValue()){
+//                        int i = 0;
+//                        series.getData().remove(i);
+//                        ++i;
+//                    }
+//                    /**
+//                     * set data of series here -> y will be the data which been read from
+//                     * serial port , x will be set automatically in line 288
+//                     * use global variables x and y
+//                     *
+//                     * please use textAreaChanger method to update dialogPane
+//                     *
+//                     */
+//                    XYChart.Data data = new XYChart.Data<>(x+"",
+//                            new Integer(input.nextLine()));
+//                    series.getData().add(data);
+//                    textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
+//                            (Integer)data.getYValue());
+//                });
+//                try {
+//                    Thread.sleep(STEP_OF_CHART.intValue()*1000);
+//                } catch (InterruptedException e) {
+//                    textAreaChanger(LOGS.INTRP, Double.NaN, Integer.MIN_VALUE);
+//                    e.printStackTrace();
+//                }
+//                x+= STEP_OF_CHART.doubleValue();
+//            }
+//            input.close();
+//        });
+//        thread.start();
     }
 }
 
