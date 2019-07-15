@@ -251,8 +251,9 @@ public class Controller {
     @FXML
     private void refresh(){
         SerialPort[] list = SerialPort.getCommPorts();
+        portNames.getItems().clear();
         for (int i = 0; i < list.length; i++){
-            portNames.getItems().set(i, list[i]
+            portNames.getItems().add(list[i]
                     .getDescriptivePortName());
         }
 
@@ -311,10 +312,12 @@ public class Controller {
                 try {
                     Thread.sleep(STEP_OF_CHART.intValue()*1000);
                 } catch (InterruptedException e) {
+                    textAreaChanger(LOGS.INTRP, Double.NaN, Integer.MIN_VALUE);
                     e.printStackTrace();
                 }
                 x+= STEP_OF_CHART.doubleValue();
             }
+            input.close();
         });
         thread.start();
     }
