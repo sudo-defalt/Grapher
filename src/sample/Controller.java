@@ -15,15 +15,29 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import com.fazecast.jSerialComm.*;
 import javafx.scene.control.*;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.TextArea;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.AnchorPane;
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
-
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
@@ -153,8 +167,7 @@ public class Controller {
      *
      */
 
-    double x = 0;
-    double y;
+    int x = 0;
     XYChart.Series<String, Integer> series;
 
     @FXML
@@ -183,6 +196,33 @@ public class Controller {
         }
     }
 
+    @FXML
+    private void export(){
+        WritableImage nodeshot = chart.snapshot(new SnapshotParameters(), null);
+        File file = new File("chart.png");
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(nodeshot, null), "png", file);
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+        PDDocument doc = new PDDocument();
+        PDPage page = new PDPage();
+        PDImageXObject pdimage;
+        PDPageContentStream content;
+        try {
+            pdimage = PDImageXObject.createFromFile("chart.png",doc);
+            content = new PDPageContentStream(doc, page);
+            content.drawImage(pdimage, 0, 100);
+            content.close();
+            doc.addPage(page);
+            doc.save("Record.pdf");
+            doc.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
 
     @FXML
     private void torsion(){
@@ -195,9 +235,9 @@ public class Controller {
         Main.changeToMain();
     }
 
-    private void textAreaChanger(LOGS log, Date x, int y){
+    private void textAreaChanger(LOGS log, String x, int y){
         dialogPane.appendText("\n["+log.name()+"]\t\t\t\t\t "
-                +"x : "+x.toString().split("[ ]")[3]
+                +"x : "+x
                 +"\t\ty : "+y);
     }
 
@@ -256,17 +296,21 @@ public class Controller {
                  Platform.runLater(() -> {
                      // get current time
                      Date now = new Date();
-                     String newData = portScanner.nextLine();
-                     XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer.parseInt(newData));
-                     series.getData().add(data);
-                     textAreaChanger(LOGS.INFO, (Date) data.getXValue(), (Integer) data.getYValue());
-
-                     if (series.getData().size() > SIZE_OF_CHART.get())
-                         series.getData().remove(0);
+                     try {
+                        String newData = portScanner.nextLine();
+                         XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer
+                                 .parseInt(newData));
+                         series.getData().add(data);
+                         textAreaChanger(LOGS.INFO, (String) data.getXValue(), (Integer) data.getYValue());
+                         if (series.getData().size() > SIZE_OF_CHART.get())
+                             series.getData().remove(0);
+                     }catch (Exception e){
+                         textAreaChanger(LOGS.INTRP, simpleDateFormat.format(now), Integer.MIN_VALUE);
+                     }
                  });
              }, 0, STEP_OF_CHART.get(), TimeUnit.SECONDS);
         } else {
-            System.out.print("boogh");
+            System.out.print("<----------------[an Error occurred]---------------->");
         }
 
         }
