@@ -14,8 +14,6 @@ package sample;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -25,7 +23,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public class Controller {
@@ -37,13 +41,10 @@ public class Controller {
      */
 
     enum LOGS{ INFO, ERROR, INTRP}
-
-    private Thread thread;
     private int setupCount = 0;
     private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(60);
-    private SimpleDoubleProperty STEP_OF_CHART = new SimpleDoubleProperty(1.0);
+    private SimpleIntegerProperty STEP_OF_CHART = new SimpleIntegerProperty(1);
     private static Double SCALE_OF_Y_AXIS;
-    private SimpleBooleanProperty loopCondition = new SimpleBooleanProperty(true);
 
     /**
      *
@@ -177,38 +178,7 @@ public class Controller {
             dataBitsSetup();
             stopBitSetup();
             paritySetup();
-            if (SCALE_OF_Y_AXIS == 20.0){
-                y_axis.setUpperBound(20.0);
-            }else {
-                y_axis.setUpperBound(3000.0);
-            }
-            /**
-             * this thread is a simple meaningless exp
-             */
-//            thread = new Thread(()->{
-//                while (loopCondition.get()){
-//                    Platform.runLater(()->{
-//                        while (series.getData().size()
-//                                >= SIZE_OF_CHART.intValue()){
-//                            int i = 0;
-//                            series.getData().remove(i);
-//                            ++i;
-//                        }
-//                        XYChart.Data data = new XYChart.Data<>(x+"",
-//                                (int)(Math.random()*SCALE_OF_Y_AXIS));
-//                        series.getData().add(data);
-//                        textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
-//                                (Integer)data.getYValue());
-//                    });
-//                    try {
-//                        Thread.sleep(STEP_OF_CHART.intValue()*1000);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                    x+= STEP_OF_CHART.doubleValue();
-//                }
-//            });
-//            thread.start();
+            y_axis.setUpperBound(SCALE_OF_Y_AXIS);
             ++setupCount;
         }
     }
@@ -225,9 +195,9 @@ public class Controller {
         Main.changeToMain();
     }
 
-    private void textAreaChanger(LOGS log, double x, int y){
+    private void textAreaChanger(LOGS log, Date x, int y){
         dialogPane.appendText("\n["+log.name()+"]\t\t\t\t\t "
-                +"x : "+x
+                +"x : "+x.toString().split("[ ]")[3]
                 +"\t\ty : "+y);
     }
 
@@ -236,7 +206,7 @@ public class Controller {
         if (!sizeOfChartTextArea.getText().isEmpty()
             && !x_axisStep.getText().isEmpty()) {
             SIZE_OF_CHART.set(new Integer(sizeOfChartTextArea.getText()));
-            STEP_OF_CHART.set(new Double(x_axisStep.getText()));
+            STEP_OF_CHART.set(new Integer(x_axisStep.getText()));
         }
     }
 
@@ -258,66 +228,47 @@ public class Controller {
     }
 
     @FXML
-    private void setButton(){
-        /**
-         * setting parameters of serial port
-         */
-//        if (portNames.getValue() != null
-//                && baudRate.getValue() != null
-//                && dataBits.getValue() != null
-//                && stopBit.getValue() != null
-//                && paritySetter() != -1) {
-//            serialPort.setBaudRate(baudRate.getValue());
-//            serialPort.setNumDataBits(dataBits.getValue());
-//            serialPort.setNumStopBits(stopBit.getValue());
-//            serialPort.setParity(paritySetter());
-//        }
+    private void setButton() {
         SerialPort serialPort = SerialPort.getCommPort(portNames.getValue());
-        serialPort.openPort();
-        Scanner input = new Scanner(serialPort.getInputStream());
-        /**
-         * this thread is used to show real-time broadcast of serial port
-         *
-         */
-        thread = new Thread(()->{
-            while (input.hasNextLine()){
-                /**
-                 * platform which set data of chart
-                 */
-                Platform.runLater(()->{
-                    /**
-                     * this loop will keep size of charts X-axis fixed
-                     */
-                    while (series.getData().size()
-                            >= SIZE_OF_CHART.intValue()){
-                        int i = 0;
-                        series.getData().remove(i);
-                        ++i;
-                    }
-                    /**
-                     * set data of series here -> y will be the data which been read from
-                     * serial port , x will be set automatically in line 288
-                     * use global variables x and y
-                     *
-                     * please use textAreaChanger method to update dialogPane
-                     *
-                     */
-                    XYChart.Data data = new XYChart.Data<>(x+"",
-                            new Integer(input.nextLine()));
-                    series.getData().add(data);
-                    textAreaChanger(LOGS.INFO, new Double((String) data.getXValue()),
-                            (Integer)data.getYValue());
-                });
-                try {
-                    Thread.sleep(STEP_OF_CHART.intValue()*1000);
-                } catch (InterruptedException e) {
-                    textAreaChanger(LOGS.INTRP, Double.NaN, Integer.MIN_VALUE);
-                    e.printStackTrace();
-                }
-                x+= STEP_OF_CHART.doubleValue();
-            }
-            input.close();
-        });
-        thread.start();
+        if (serialPort.openPort()) {
+            serialPort.setComPortTimeouts(SerialPort.TIMEOUT_NONBLOCKING, 0, 0);
+            Scanner input = new Scanner(serialPort.getInputStream());
+            /**
+             * this thread is used to show real-time broadcast of serial port
+             *
+             */
+            if(serialPort.openPort()) {
+            serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0);
+            Scanner portScanner = new Scanner(serialPort.getInputStream());
+             XYChart.Series<String, Integer> series = new XYChart.Series<>();
+
+             chart.getData().add(series);
+
+             final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+
+             // setup a scheduled executor to periodically put data into the chart
+             ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+             // put data onto graph per second
+             scheduledExecutorService.scheduleAtFixedRate(() -> {
+
+                 // Update the chart
+                 Platform.runLater(() -> {
+                     // get current time
+                     Date now = new Date();
+                     String newData = portScanner.nextLine();
+                     XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer.parseInt(newData));
+                     series.getData().add(data);
+                     textAreaChanger(LOGS.INFO, (Date) data.getXValue(), (Integer) data.getYValue());
+
+                     if (series.getData().size() > SIZE_OF_CHART.get())
+                         series.getData().remove(0);
+                 });
+             }, 0, STEP_OF_CHART.get(), TimeUnit.SECONDS);
+        } else {
+            System.out.print("boogh");
+        }
+
+        }
     }
 }
