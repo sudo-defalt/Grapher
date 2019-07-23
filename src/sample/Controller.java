@@ -56,7 +56,7 @@ public class Controller {
 
     enum LOGS{ INFO, ERROR, INTRP}
     private int setupCount = 0;
-    private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(60);
+    private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(20);
     private SimpleIntegerProperty STEP_OF_CHART = new SimpleIntegerProperty(1);
     private static Double SCALE_OF_Y_AXIS;
 
@@ -168,7 +168,7 @@ public class Controller {
      */
 
     int x = 0;
-    XYChart.Series<String, Integer> series;
+    XYChart.Series<String, Integer> series = new XYChart.Series<>();
 
     @FXML
     private void setUp(){
@@ -203,6 +203,9 @@ public class Controller {
         try {
             ImageIO.write(SwingFXUtils.fromFXImage(nodeshot, null), "png", file);
         } catch (IOException e) {
+            textAreaChanger(LOGS.INTRP, "<----------Screenshot has not "
+                    +"saved because of interruption------------->",
+                    Integer.MIN_VALUE);
             System.err.println(e);
         }
         PDDocument doc = new PDDocument();
@@ -218,6 +221,7 @@ public class Controller {
             doc.save("Record.pdf");
             doc.close();
         } catch (IOException ex) {
+            textAreaChanger(LOGS.ERROR, "<-------------Screenshot has not saved------------->", Integer.MIN_VALUE);
             Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -262,7 +266,7 @@ public class Controller {
         portNames.getItems().clear();
         for (int i = 0; i < list.length; i++){
             portNames.getItems().add(list[i]
-                    .getDescriptivePortName());
+                    .getSystemPortName());
         }
 
     }
@@ -270,49 +274,87 @@ public class Controller {
     @FXML
     private void setButton() {
         SerialPort serialPort = SerialPort.getCommPort(portNames.getValue());
-        if (serialPort.openPort()) {
-            serialPort.setComPortTimeouts(SerialPort.TIMEOUT_NONBLOCKING, 0, 0);
-            Scanner input = new Scanner(serialPort.getInputStream());
-            /**
-             * this thread is used to show real-time broadcast of serial port
-             *
-             */
-            if(serialPort.openPort()) {
+        if(serialPort.openPort()) {
             serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0);
             Scanner portScanner = new Scanner(serialPort.getInputStream());
-             XYChart.Series<String, Integer> series = new XYChart.Series<>();
+            XYChart.Series<String, Integer> series = new XYChart.Series<>();
 
-             chart.getData().add(series);
+            chart.getData().add(series);
 
-             final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
 
-             // setup a scheduled executor to periodically put data into the chart
-             ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            // setup a scheduled executor to periodically put data into the chart
+            ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-             // put data onto graph per second
-             scheduledExecutorService.scheduleAtFixedRate(() -> {
+            // put data onto graph per second
+            scheduledExecutorService.scheduleAtFixedRate(() -> {
 
-                 // Update the chart
-                 Platform.runLater(() -> {
-                     // get current time
-                     Date now = new Date();
-                     try {
-                        String newData = portScanner.nextLine();
-                         XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer
-                                 .parseInt(newData));
-                         series.getData().add(data);
-                         textAreaChanger(LOGS.INFO, (String) data.getXValue(), (Integer) data.getYValue());
-                         if (series.getData().size() > SIZE_OF_CHART.get())
-                             series.getData().remove(0);
-                     }catch (Exception e){
-                         textAreaChanger(LOGS.INTRP, simpleDateFormat.format(now), Integer.MIN_VALUE);
-                     }
-                 });
-             }, 0, STEP_OF_CHART.get(), TimeUnit.SECONDS);
+                // Update the chart
+                Platform.runLater(() -> {
+                    // get current time
+                    Date now = new Date();
+                    String newData = portScanner.nextLine();
+                    XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer.parseInt(newData));
+                    series.getData().add(data);
+                    textAreaChanger(LOGS.INFO, (String)data.getXValue(), (Integer) data.getYValue());
+                    while (series.getData().size() > SIZE_OF_CHART.get())
+                        series.getData().remove(0);
+                });
+            }, 0, STEP_OF_CHART.get(), TimeUnit.SECONDS);
         } else {
-            System.out.print("<----------------[an Error occurred]---------------->");
+            textAreaChanger(LOGS.ERROR, "<--------------Port has not opened-------------->", Integer.MIN_VALUE);
         }
 
-        }
+
+
+
+
+
+
+
+//        SerialPort serialPort = SerialPort.getCommPort(portNames.getValue());
+//        if (serialPort.openPort()) {
+//            serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0);
+//            System.out.println(serialPort.isOpen());
+//            /**
+//             * this thread is used to show real-time broadcast of serial port
+//             *
+//             */
+//            if(serialPort.openPort()) {
+//            Scanner portScanner = new Scanner(serialPort.getInputStream());
+//             XYChart.Series<String, Integer> series = new XYChart.Series<>();
+//
+//             chart.getData().add(series);
+//
+//             final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+//
+//             // setup a scheduled executor to periodically put data into the chart
+//             ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+//
+//             // put data onto graph per second
+//             scheduledExecutorService.scheduleAtFixedRate(() -> {
+//
+//                 // Update the chart
+//                 Platform.runLater(() -> {
+//                     // get current time
+//                     Date now = new Date();
+//                     try {
+//                        String newData = portScanner.nextLine();
+//                         XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer
+//                                 .parseInt(newData));
+//                         series.getData().add(data);
+//                         textAreaChanger(LOGS.INFO, (String) data.getXValue(), (Integer) data.getYValue());
+//                         if (series.getData().size() > SIZE_OF_CHART.get())
+//                             series.getData().remove(0);
+//                     }catch (Exception e){
+//                         textAreaChanger(LOGS.INTRP, simpleDateFormat.format(now), Integer.MIN_VALUE);
+//                     }
+//                 });
+//             }, 0, STEP_OF_CHART.get(), TimeUnit.SECONDS);
+//        } else {
+//            System.out.print("<----------------[an Error occurred]---------------->");
+//        }
+//
+//        }
     }
 }
