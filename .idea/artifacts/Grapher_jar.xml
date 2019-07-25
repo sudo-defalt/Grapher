@@ -1,0 +1,15 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Grapher:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Grapher_jar</output-path>
+    <root id="archive" name="Grapher.jar">
+      <element id="module-output" name="Grapher" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/jSerialComm-2.5.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/jfoenix-8.0.8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/Compressed/apache-PDFBox/commons-logging-1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/Compressed/apache-PDFBox/fontbox-2.0.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/Compressed/apache-PDFBox/pdfbox-2.0.3.jar" path-in-jar="/" />
+      <element id="library" level="project" name="commons-logging-1.2" />
+      <element id="library" level="project" name="jSerialComm-2.5.1" />
+    </root>
+  </artifact>
+</component>

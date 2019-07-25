@@ -14,6 +14,7 @@ package sample;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
@@ -24,11 +25,12 @@ import com.fazecast.jSerialComm.*;
 import javafx.scene.control.*;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.TextArea;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -55,10 +57,18 @@ public class Controller {
      */
 
     enum LOGS{ INFO, ERROR, INTRP}
+
+
     private int setupCount = 0;
+    private static SimpleBooleanProperty condition = new SimpleBooleanProperty(false);
     private SimpleIntegerProperty SIZE_OF_CHART = new SimpleIntegerProperty(20);
     private SimpleIntegerProperty STEP_OF_CHART = new SimpleIntegerProperty(1);
     private static Double SCALE_OF_Y_AXIS;
+    private ScheduledExecutorService scheduledExecutorService;
+    private String pdfName;
+    private String pngName;
+    private String txtName;
+
 
     /**
      *
@@ -70,17 +80,10 @@ public class Controller {
     @FXML
     Pane innerPane;
     @FXML
-    JFXTextField sizeOfChartTextArea, x_axisStep;
+    JFXTextField sizeOfChartTextArea, x_axisStep,
+            pdfNameTextField, pngNameTextField, txtNameTextField;
     @FXML
     JFXComboBox<String> portNames;
-    @FXML
-    JFXComboBox<Integer> baudRate;
-    @FXML
-    JFXComboBox<Integer> dataBits;
-    @FXML
-    JFXComboBox<Integer> stopBit;
-    @FXML
-    JFXComboBox<String> parity;
     @FXML
     TextArea dialogPane;
     @FXML
@@ -93,67 +96,6 @@ public class Controller {
     LineChart<String, Integer> chart;
     @FXML
     NumberAxis y_axis;
-    /**
-     *
-     * inner Setup for choiceBoxes of
-     * baud rate, data bits, stop bit and parity
-     *
-     */
-
-    private void baudRateSetup(){
-        baudRate.getItems().add(110);
-        baudRate.getItems().add(300);
-        baudRate.getItems().add(600);
-        baudRate.getItems().add(1200);
-        baudRate.getItems().add(4800);
-        baudRate.getItems().add(9600);
-        baudRate.getItems().add(14400);
-        baudRate.getItems().add(19200);
-        baudRate.getItems().add(38400);
-        baudRate.getItems().add(57600);
-        baudRate.getItems().add(115200);
-        baudRate.getItems().add(128000);
-        baudRate.getItems().add(256000);
-        baudRate.setValue(110);
-    }
-    
-    private void dataBitsSetup(){
-        dataBits.getItems().add(5);
-        dataBits.getItems().add(6);
-        dataBits.getItems().add(7);
-        dataBits.getItems().add(8);
-        dataBits.setValue(5);
-    }
-
-    private void stopBitSetup(){
-        stopBit.getItems().add(1);
-        stopBit.getItems().add(2);
-        stopBit.setValue(1);
-    }
-
-    private void paritySetup(){
-        parity.getItems().add("Even");
-        parity.getItems().add("Odd");
-        parity.getItems().add("Mark");
-        parity.getItems().add("Space");
-        parity.getItems().add("None");
-        parity.setValue("None");
-    }
-
-    private int paritySetter(){
-        if (parity.getValue().equalsIgnoreCase("EVEN"))
-            return 2;
-        if (parity.getValue().equalsIgnoreCase("ODD"))
-            return 1;
-        if (parity.getValue().equalsIgnoreCase("MARK"))
-            return 3;
-        if (parity.getValue().equalsIgnoreCase("SPACE"))
-            return 4;
-        if (parity.getValue().equalsIgnoreCase("NONE"))
-            return 0;
-        else return -1;
-    }
-    
     /**
      *
      * setup choiceBoxes and other elements
@@ -173,6 +115,14 @@ public class Controller {
     @FXML
     private void setUp(){
         if (setupCount == 0){
+            x_axisStep.setOnKeyPressed((keyEvent)->{
+                if (keyEvent.getCode() == KeyCode.ENTER)
+                    chartChanger();
+            });
+            sizeOfChartTextArea.setOnKeyPressed((keyEvent)->{
+                if (keyEvent.getCode() == KeyCode.ENTER)
+                    chartChanger();
+            });
             dialogPane.setWrapText(true);
             chart.prefWidthProperty().bind(innerPane
                     .widthProperty());
@@ -187,12 +137,40 @@ public class Controller {
             v_separator.prefHeightProperty().bind(pane.heightProperty());
             menuBar.prefWidthProperty().bind(pane.widthProperty());
             refresh();
-            baudRateSetup();
-            dataBitsSetup();
-            stopBitSetup();
-            paritySetup();
             y_axis.setUpperBound(SCALE_OF_Y_AXIS);
             ++setupCount;
+            thread = new Thread(()->{
+                while (true){
+                    while (condition.getValue()){
+                        if (series.getData().size() > SIZE_OF_CHART.get()){
+                            series.getData().remove(0, series.
+                                    getData().size()-SIZE_OF_CHART.get());
+                        }
+                        Platform.runLater(()->{
+                            XYChart.Data data = new XYChart.Data<>(x+ "",
+                                    (int)(Math.random()*SCALE_OF_Y_AXIS));
+                            series.getData().add(data);
+                            textAreaChanger(LOGS.INFO, (String)data.getXValue(),
+                                    (int) data.getYValue());
+                            });
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        x += STEP_OF_CHART.getValue();
+                    }
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        textAreaChanger(LOGS.INTRP, "<--------Thread"
+                                +" has interrupted-------->",
+                                Integer.MIN_VALUE);
+                        e.printStackTrace();
+                    }
+                }
+            });
+            thread.start();
         }
     }
 
@@ -251,6 +229,14 @@ public class Controller {
             && !x_axisStep.getText().isEmpty()) {
             SIZE_OF_CHART.set(new Integer(sizeOfChartTextArea.getText()));
             STEP_OF_CHART.set(new Integer(x_axisStep.getText()));
+        }else {
+            if (sizeOfChartTextArea.getText().isEmpty()){
+                sizeOfChartTextArea.requestFocus();
+                sizeOfChartTextArea.setFocusColor(Color.RED);
+            }else {
+                x_axisStep.requestFocus();
+                x_axisStep.setFocusColor(Color.RED);
+            }
         }
     }
 
@@ -268,7 +254,6 @@ public class Controller {
             portNames.getItems().add(list[i]
                     .getSystemPortName());
         }
-
     }
 
     @FXML
@@ -284,7 +269,7 @@ public class Controller {
             final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
 
             // setup a scheduled executor to periodically put data into the chart
-            ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
             // put data onto graph per second
             scheduledExecutorService.scheduleAtFixedRate(() -> {
@@ -304,57 +289,22 @@ public class Controller {
         } else {
             textAreaChanger(LOGS.ERROR, "<--------------Port has not opened-------------->", Integer.MIN_VALUE);
         }
+    }
 
-
-
-
-
-
-
-
-//        SerialPort serialPort = SerialPort.getCommPort(portNames.getValue());
-//        if (serialPort.openPort()) {
-//            serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0,0);
-//            System.out.println(serialPort.isOpen());
-//            /**
-//             * this thread is used to show real-time broadcast of serial port
-//             *
-//             */
-//            if(serialPort.openPort()) {
-//            Scanner portScanner = new Scanner(serialPort.getInputStream());
-//             XYChart.Series<String, Integer> series = new XYChart.Series<>();
-//
-//             chart.getData().add(series);
-//
-//             final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-//
-//             // setup a scheduled executor to periodically put data into the chart
-//             ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-//
-//             // put data onto graph per second
-//             scheduledExecutorService.scheduleAtFixedRate(() -> {
-//
-//                 // Update the chart
-//                 Platform.runLater(() -> {
-//                     // get current time
-//                     Date now = new Date();
-//                     try {
-//                        String newData = portScanner.nextLine();
-//                         XYChart.Data data = new XYChart.Data<>(simpleDateFormat.format(now) + "", Integer
-//                                 .parseInt(newData));
-//                         series.getData().add(data);
-//                         textAreaChanger(LOGS.INFO, (String) data.getXValue(), (Integer) data.getYValue());
-//                         if (series.getData().size() > SIZE_OF_CHART.get())
-//                             series.getData().remove(0);
-//                     }catch (Exception e){
-//                         textAreaChanger(LOGS.INTRP, simpleDateFormat.format(now), Integer.MIN_VALUE);
-//                     }
-//                 });
-//             }, 0, STEP_OF_CHART.get(), TimeUnit.SECONDS);
-//        } else {
-//            System.out.print("<----------------[an Error occurred]---------------->");
-//        }
-//
-//        }
+    /**
+     * method to control main thread
+     */
+    private Thread thread;
+    private int iteration = 0;
+    @FXML
+    private void start_stop(){
+        if (iteration%2 == 0){
+            System.out.println("!!!!");
+            condition.set(true);
+        }else {
+            System.out.println("@@@@");
+            condition.set(false);
+        }
+        ++iteration;
     }
 }

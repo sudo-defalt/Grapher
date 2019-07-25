@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="commons-logging-1.2">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Downloads/Compressed/apache-PDFBox/commons-logging-1.2.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/Compressed/apache-PDFBox/fontbox-2.0.3.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/Compressed/apache-PDFBox/pdfbox-2.0.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
