@@ -9,12 +9,12 @@
 
 <AnchorPane prefHeight="595" prefWidth="798" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
-      <JFXButton fx:id="tensionButton" buttonType="RAISED" cacheShape="false" defaultButton="true" ellipsisString="" layoutX="240.0" layoutY="412.0" mnemonicParsing="false" onAction="#tension" prefHeight="55.0" prefWidth="160.0" text="Tension" textAlignment="CENTER" textOverrun="CLIP" wrapText="true">
+      <JFXButton fx:id="tensionButton" buttonType="RAISED" cacheShape="false" ellipsisString="" layoutX="240.0" layoutY="412.0" mnemonicParsing="false" onMouseClicked="#tension" prefHeight="55.0" prefWidth="160.0" text="Tension" textAlignment="CENTER" textOverrun="CLIP" wrapText="true">
          <font>
             <Font size="25.0" />
          </font>
       </JFXButton>
-      <JFXButton fx:id="torsionButton" buttonType="RAISED" cacheShape="false" defaultButton="true" ellipsisString="" layoutX="400.0" layoutY="412.0" mnemonicParsing="false" onAction="#torsion" prefHeight="55.0" prefWidth="160.0" text="Torsion" textAlignment="CENTER" textOverrun="CLIP" wrapText="true">
+      <JFXButton fx:id="torsionButton" buttonType="RAISED" cacheShape="false" ellipsisString="" layoutX="400.0" layoutY="412.0" mnemonicParsing="false" onMouseClicked="#torsion" prefHeight="55.0" prefWidth="160.0" text="Torsion" textAlignment="CENTER" textOverrun="CLIP" wrapText="true">
          <font>
             <Font size="25.0" />
          </font>

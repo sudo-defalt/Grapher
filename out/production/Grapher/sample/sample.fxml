@@ -53,7 +53,7 @@
       </Text>
       <JFXComboBox fx:id="portNames" layoutX="47.0" layoutY="81.0" prefHeight="31.0" prefWidth="153.0" />
       <JFXButton fx:id="setButton" buttonType="RAISED" contentDisplay="CENTER" layoutX="20.0" layoutY="136.0" mnemonicParsing="false" onAction="#setButton" prefHeight="31.0" prefWidth="70.0" text="Set" />
-      <JFXButton fx:id="refreshButton" layoutX="99.0" layoutY="136.0" mnemonicParsing="false" onAction="#refresh" prefHeight="31.0" prefWidth="70.0" text="Refresh" />
+      <JFXButton fx:id="refreshButton" buttonType="RAISED" layoutX="99.0" layoutY="136.0" mnemonicParsing="false" onAction="#refresh" prefHeight="31.0" prefWidth="70.0" text="Refresh" />
       <VBox fx:id="innerPane" layoutX="211.0" layoutY="36.0">
          <children>
             <LineChart fx:id="chart" alternativeRowFillVisible="false" axisSortingPolicy="NONE" createSymbols="false" prefHeight="332.0" prefWidth="585.0">
@@ -63,12 +63,18 @@
               <yAxis>
                 <NumberAxis fx:id="y_axis" side="LEFT" />
               </yAxis>
+               <cursor>
+                  <Cursor fx:constant="DEFAULT" />
+               </cursor>
             </LineChart>
-            <TextArea fx:id="dialogPane" accessibleRole="PARENT" editable="false" focusTraversable="false" prefHeight="218.0" prefWidth="578.0" wrapText="true" />
+            <TextArea fx:id="dialogPane" accessibleRole="PARENT" editable="false" focusTraversable="false" prefHeight="218.0" prefWidth="578.0" wrapText="true">
+               <cursor>
+                  <Cursor fx:constant="DEFAULT" />
+               </cursor></TextArea>
          </children>
       </VBox>
       <JFXTextField fx:id="sizeOfChartTextArea" layoutX="52.0" layoutY="265.0" prefHeight="31.0" prefWidth="104.0" />
-      <JFXButton layoutX="83.0" layoutY="370.0" mnemonicParsing="false" onAction="#chartChanger" text="Set" />
+      <JFXButton buttonType="RAISED" layoutX="83.0" layoutY="370.0" mnemonicParsing="false" onAction="#chartChanger" text="Set" />
       <JFXTextField layoutX="52.0" layoutY="328.0" prefHeight="31.0" prefWidth="104.0" fx:id="x_axisStep" />
       <Label layoutX="52.0" layoutY="244.0" prefHeight="21.0" prefWidth="104.0" text="  X-Axis Range" />
       <Label layoutX="55.0" layoutY="313.0" prefHeight="21.0" prefWidth="97.0" text="  X-Axis Step" />
