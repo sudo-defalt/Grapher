@@ -294,7 +294,7 @@ public class Controller {
 
                 // put data onto graph per second
                 scheduledExecutorService.scheduleAtFixedRate(() -> {
-                    if(iteration % 2 != 0) {
+                    if(serialPort.openPort() && iteration % 2 != 0) {
                         // Update the chart
                         Platform.runLater(() -> {
                             // get current time
@@ -312,7 +312,7 @@ public class Controller {
                 textAreaChanger(LOGS.ERROR, "<--------------Port has not opened-------------->", Integer.MIN_VALUE);
             }
         } catch (Exception e) {
-            System.out.println("No ports found!");
+            dialogPane.appendText("\n[" + LOGS.ERROR+ "]\t\t\t\t\t "+"");
         }
     }
 
